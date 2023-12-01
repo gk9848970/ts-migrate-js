@@ -1,26 +1,40 @@
 import { times, range } from "lodash/fp"
 
+export type Tile = {
+  status: (typeof TILE_STATUSES)[keyof typeof TILE_STATUSES]
+  mine: boolean
+  x: number
+  y: number
+  adjacentMinesCount: number
+}
+
+export type Board = Tile[][]
+
 export const TILE_STATUSES = {
   HIDDEN: "hidden",
   MINE: "mine",
   NUMBER: "number",
   MARKED: "marked",
-}
+} as const;
 
-export function createBoard(boardSize, minePositions) {
+
+// Any used
+export function createBoard(boardSize: number, minePositions: any[]) {
   return times(x => {
     return times(y => {
-      return {
+      const tile: Tile = {
         x,
         y,
         mine: minePositions.some(positionMatch.bind(null, { x, y })),
         status: TILE_STATUSES.HIDDEN,
-      }
+      };
+
+      return tile;
     }, boardSize)
-  }, boardSize)
+  }, boardSize) as Board
 }
 
-export function markedTilesCount(board) {
+export function markedTilesCount(board: Board) {
   return board.reduce((count, row) => {
     return (
       count + row.filter(tile => tile.status === TILE_STATUSES.MARKED).length
@@ -28,7 +42,7 @@ export function markedTilesCount(board) {
   }, 0)
 }
 
-export function markTile(board, { x, y }) {
+export function markTile(board: Board, { x, y }) {
   const tile = board[x][y]
   if (
     tile.status !== TILE_STATUSES.HIDDEN &&
@@ -52,7 +66,7 @@ export function markTile(board, { x, y }) {
   }
 }
 
-function replaceTile(board, position, newTile) {
+function replaceTile(board: Board, position, newTile) {
   return board.map((row, x) => {
     return row.map((tile, y) => {
       if (positionMatch(position, { x, y })) {
@@ -63,7 +77,7 @@ function replaceTile(board, position, newTile) {
   })
 }
 
-export function revealTile(board, { x, y }) {
+export function revealTile(board: Board, { x, y }) {
   const tile = board[x][y]
   if (tile.status !== TILE_STATUSES.HIDDEN) {
     return board
@@ -88,7 +102,7 @@ export function revealTile(board, { x, y }) {
   return newBoard
 }
 
-export function checkWin(board) {
+export function checkWin(board: Board) {
   return board.every(row => {
     return row.every(tile => {
       return (
@@ -101,7 +115,7 @@ export function checkWin(board) {
   })
 }
 
-export function checkLose(board) {
+export function checkLose(board: Board) {
   return board.some(row => {
     return row.some(tile => {
       return tile.status === TILE_STATUSES.MINE

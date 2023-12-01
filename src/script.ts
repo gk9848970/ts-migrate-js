@@ -1,6 +1,7 @@
 // Display/UI
 
 import {
+  Tile,
   TILE_STATUSES,
   createBoard,
   markTile,
@@ -18,12 +19,13 @@ let board = createBoard(
   BOARD_SIZE,
   getMinePositions(BOARD_SIZE, NUMBER_OF_MINES)
 )
-const boardElement = document.querySelector(".board")
-const minesLeftText = document.querySelector("[data-mine-count]")
-const messageText = document.querySelector(".subtext")
+const boardElement = document.querySelector<HTMLDivElement>(".board")!
+const minesLeftText = document.querySelector<HTMLSpanElement>("[data-mine-count]")!
+const messageText = document.querySelector<HTMLDivElement>(".subtext")!
 
 function render() {
   boardElement.innerHTML = ""
+  // Left
   checkGameEnd()
 
   getTileElements().forEach(element => {
@@ -39,29 +41,34 @@ function getTileElements() {
   })
 }
 
-function tileToElement(tile) {
+function tileToElement(tile: Tile) {
   const element = document.createElement("div")
   element.dataset.status = tile.status
-  element.dataset.x = tile.x
-  element.dataset.y = tile.y
-  element.textContent = tile.adjacentMinesCount || ""
+  element.dataset.x = tile.x.toString()
+  element.dataset.y = tile.y.toString()
+  element.textContent = tile.adjacentMinesCount.toString() || ""
   return element
 }
 
-boardElement.addEventListener("click", e => {
-  if (!e.target.matches("[data-status]")) return
+boardElement.addEventListener("click", (e: MouseEvent) => {
+  const target = e.target as HTMLElement;
+  if (!target.matches("[data-status]")) return;
 
+  // Left
   board = revealTile(board, {
-    x: parseInt(e.target.dataset.x),
-    y: parseInt(e.target.dataset.y),
+    x: parseInt(target!.dataset.x),
+    y: parseInt(target!.dataset.y),
   })
   render()
 })
 
+// Left
 boardElement.addEventListener("contextmenu", e => {
-  if (!e.target.matches("[data-status]")) return
+  const target = e.target as HTMLElement;
+  if (!target.matches("[data-status]")) return
 
   e.preventDefault()
+  // Left
   board = markTile(board, {
     x: parseInt(e.target.dataset.x),
     y: parseInt(e.target.dataset.y),
@@ -69,11 +76,11 @@ boardElement.addEventListener("contextmenu", e => {
   render()
 })
 
-boardElement.style.setProperty("--size", BOARD_SIZE)
+boardElement.style.setProperty("--size", `${BOARD_SIZE}`)
 render()
 
 function listMinesLeft() {
-  minesLeftText.textContent = NUMBER_OF_MINES - markedTilesCount(board)
+  minesLeftText.textContent = (NUMBER_OF_MINES - markedTilesCount(board)).toString();
 }
 
 function checkGameEnd() {
@@ -92,18 +99,21 @@ function checkGameEnd() {
     messageText.textContent = "You Lose"
     board.forEach(row => {
       row.forEach(tile => {
+        // Left - markTile
         if (tile.status === TILE_STATUSES.MARKED) board = markTile(board, tile)
+        // Left - revealTile
         if (tile.mine) board = revealTile(board, tile)
       })
     })
   }
 }
 
-function stopProp(e) {
+function stopProp(e: Event) {
   e.stopImmediatePropagation()
 }
 
-function getMinePositions(boardSize, numberOfMines) {
+function getMinePositions(boardSize: number, numberOfMines: number) {
+  // Left
   const positions = []
 
   while (positions.length < numberOfMines) {
@@ -112,6 +122,7 @@ function getMinePositions(boardSize, numberOfMines) {
       y: randomNumber(boardSize),
     }
 
+    // Left
     if (!positions.some(positionMatch.bind(null, position))) {
       positions.push(position)
     }
@@ -120,6 +131,6 @@ function getMinePositions(boardSize, numberOfMines) {
   return positions
 }
 
-function randomNumber(size) {
+function randomNumber(size: number) {
   return Math.floor(Math.random() * size)
 }
