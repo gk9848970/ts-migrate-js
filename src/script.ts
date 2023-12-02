@@ -10,6 +10,7 @@ import {
   checkLose,
   positionMatch,
   markedTilesCount,
+  Position,
 } from "./minesweeper.js"
 
 const BOARD_SIZE = 10
@@ -25,7 +26,6 @@ const messageText = document.querySelector<HTMLDivElement>(".subtext")!
 
 function render() {
   boardElement.innerHTML = ""
-  // Left
   checkGameEnd()
 
   getTileElements().forEach(element => {
@@ -46,32 +46,29 @@ function tileToElement(tile: Tile) {
   element.dataset.status = tile.status
   element.dataset.x = tile.x.toString()
   element.dataset.y = tile.y.toString()
-  element.textContent = tile.adjacentMinesCount.toString() || ""
-  return element
+  element.textContent = tile.adjacentMinesCount ? tile.adjacentMinesCount.toString() : ""
+  return element;
 }
 
 boardElement.addEventListener("click", (e: MouseEvent) => {
   const target = e.target as HTMLElement;
   if (!target.matches("[data-status]")) return;
 
-  // Left
   board = revealTile(board, {
-    x: parseInt(target!.dataset.x),
-    y: parseInt(target!.dataset.y),
+    x: parseInt(target.dataset.x!),
+    y: parseInt(target.dataset.y!),
   })
   render()
 })
 
-// Left
 boardElement.addEventListener("contextmenu", e => {
   const target = e.target as HTMLElement;
   if (!target.matches("[data-status]")) return
 
   e.preventDefault()
-  // Left
   board = markTile(board, {
-    x: parseInt(e.target.dataset.x),
-    y: parseInt(e.target.dataset.y),
+    x: parseInt(target.dataset.x!),
+    y: parseInt(target.dataset.y!),
   })
   render()
 })
@@ -99,32 +96,28 @@ function checkGameEnd() {
     messageText.textContent = "You Lose"
     board.forEach(row => {
       row.forEach(tile => {
-        // Left - markTile
         if (tile.status === TILE_STATUSES.MARKED) board = markTile(board, tile)
-        // Left - revealTile
         if (tile.mine) board = revealTile(board, tile)
       })
     })
   }
 }
 
-function stopProp(e: Event) {
+function stopProp(e: MouseEvent) {
   e.stopImmediatePropagation()
 }
 
 function getMinePositions(boardSize: number, numberOfMines: number) {
-  // Left
-  const positions = []
+  const positions: Position[] = []
 
   while (positions.length < numberOfMines) {
-    const position = {
+    const position: Position = {
       x: randomNumber(boardSize),
       y: randomNumber(boardSize),
     }
 
-    // Left
     if (!positions.some(positionMatch.bind(null, position))) {
-      positions.push(position)
+      positions.push(position);
     }
   }
 

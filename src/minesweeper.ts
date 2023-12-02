@@ -1,14 +1,15 @@
 import { times, range } from "lodash/fp"
 
-export type Tile = {
-  status: (typeof TILE_STATUSES)[keyof typeof TILE_STATUSES]
-  mine: boolean
+export type Position = {
   x: number
   y: number
-  adjacentMinesCount: number
 }
 
-export type Board = Tile[][]
+export type Tile = Position & {
+  status: (typeof TILE_STATUSES)[keyof typeof TILE_STATUSES]
+  mine: boolean
+  adjacentMinesCount?: number
+}
 
 export const TILE_STATUSES = {
   HIDDEN: "hidden",
@@ -18,8 +19,7 @@ export const TILE_STATUSES = {
 } as const;
 
 
-// Any used
-export function createBoard(boardSize: number, minePositions: any[]) {
+export function createBoard(boardSize: number, minePositions: Position[]) {
   return times(x => {
     return times(y => {
       const tile: Tile = {
@@ -31,10 +31,10 @@ export function createBoard(boardSize: number, minePositions: any[]) {
 
       return tile;
     }, boardSize)
-  }, boardSize) as Board
+  }, boardSize)
 }
 
-export function markedTilesCount(board: Board) {
+export function markedTilesCount(board: Tile[][]) {
   return board.reduce((count, row) => {
     return (
       count + row.filter(tile => tile.status === TILE_STATUSES.MARKED).length
@@ -42,7 +42,7 @@ export function markedTilesCount(board: Board) {
   }, 0)
 }
 
-export function markTile(board: Board, { x, y }) {
+export function markTile(board: Tile[][], { x, y }: Position) {
   const tile = board[x][y]
   if (
     tile.status !== TILE_STATUSES.HIDDEN &&
@@ -66,7 +66,7 @@ export function markTile(board: Board, { x, y }) {
   }
 }
 
-function replaceTile(board: Board, position, newTile) {
+function replaceTile(board: Tile[][], position: Position, newTile: Tile) {
   return board.map((row, x) => {
     return row.map((tile, y) => {
       if (positionMatch(position, { x, y })) {
@@ -77,7 +77,7 @@ function replaceTile(board: Board, position, newTile) {
   })
 }
 
-export function revealTile(board: Board, { x, y }) {
+export function revealTile(board: Tile[][], { x, y }: Position): Tile[][] {
   const tile = board[x][y]
   if (tile.status !== TILE_STATUSES.HIDDEN) {
     return board
@@ -96,13 +96,14 @@ export function revealTile(board: Board, { x, y }) {
   )
   if (mines.length === 0) {
     return adjacentTiles.reduce((b, t) => {
-      return revealTile(b, t)
+      return revealTile(b, t);
     }, newBoard)
   }
-  return newBoard
+
+  return newBoard;
 }
 
-export function checkWin(board: Board) {
+export function checkWin(board: Tile[][]) {
   return board.every(row => {
     return row.every(tile => {
       return (
@@ -115,7 +116,7 @@ export function checkWin(board: Board) {
   })
 }
 
-export function checkLose(board: Board) {
+export function checkLose(board: Tile[][]) {
   return board.some(row => {
     return row.some(tile => {
       return tile.status === TILE_STATUSES.MINE
@@ -123,15 +124,14 @@ export function checkLose(board: Board) {
   })
 }
 
-export function positionMatch(a, b) {
+export function positionMatch(a: Position, b: Position) {
   return a.x === b.x && a.y === b.y
 }
 
-function nearbyTiles(board, { x, y }) {
+function nearbyTiles(board: Tile[][], { x, y }: Position) {
   const offsets = range(-1, 2)
 
-  return offsets
-    .flatMap(xOffset => {
+  return offsets.flatMap(xOffset => {
       return offsets.map(yOffset => {
         return board[x + xOffset]?.[y + yOffset]
       })
